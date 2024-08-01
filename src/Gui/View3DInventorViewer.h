@@ -45,6 +45,7 @@
 #include "CornerCrossLetters.h"
 #include "View3DInventorSelection.h"
 #include "Quarter/SoQTQuarterAdaptor.h"
+#include "Inventor/SoFC3DEffects.h"
 
 
 class SoTranslation;
@@ -501,6 +502,7 @@ private:
     SoEventCallback* pEventCallback;
     NavigationStyle* navigation;
     SoFCUnifiedSelection* selectionRoot;
+    SoFC3DEffects* effects3d;
 
     SoClipPlane *pcClipPlane;
 

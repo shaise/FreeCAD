@@ -519,6 +519,11 @@ void View3DInventorViewer::init()
     objectGroup->ref();
     pcViewProviderRoot->addChild(objectGroup);
 
+    effects3d = new SoFC3DEffects;
+    effects3d->setScene(objectGroup);
+    //pcViewProviderRoot->addChild(effects3d);
+    pcViewProviderRoot->addChild(effects3d);
+
     // Set our own render action which show a bounding box if
     // the SoFCSelection::BOX style is set
     //
