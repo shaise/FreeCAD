@@ -74,6 +74,7 @@
 #include "Inventor/SmSwitchboard.h"
 #include "Inventor/SoAutoZoomTranslation.h"
 #include "Inventor/SoDrawingGrid.h"
+#include "Inventor/SoFC3DEffects.h"
 #include "propertyeditor/PropertyItem.h"
 #include "ArcEngine.h"
 
@@ -143,6 +144,7 @@ void Gui::SoFCDB::init()
     SoFCPathAnnotation              ::initClass();
     SoMouseWheelEvent               ::initClass();
     So3DAnnotation                  ::initClass();
+    SoFC3DEffects                   ::initClass();
 
     PropertyItem                    ::init();
     PropertySeparatorItem           ::init();
