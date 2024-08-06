@@ -33,6 +33,7 @@
 #include <Inventor/nodes/SoOrthographicCamera.h>
 #include <Inventor/nodes/SoCoordinate3.h>
 #include <Inventor/nodes/SoCallback.h>
+#include <Inventor/nodes/SoSwitch.h>
 
 namespace Gui
 {
@@ -80,6 +81,7 @@ protected:
     ~SoFC3DEffects() override;
 
     SoNode* Scene;
+    SoSwitch* shadowSwitch;
     SoGroup* ShadowPlane;
     SoSeparator* BaseShadowScene;
     SoSceneTexture2* BaseShadowTexture;

@@ -120,7 +120,9 @@ void Gui::SoFC3DEffects::createScene()
 
     // a transparent plane under the scene to accept the shadow
     createShadowPlane(BlurPass2Texture);
-    addChild(ShadowPlane);
+    shadowSwitch = new SoSwitch();
+    shadowSwitch->addChild(ShadowPlane);
+    addChild(shadowSwitch);
 }
 
 bool Gui::SoFC3DEffects::updateBoundingBox()
@@ -185,6 +187,12 @@ void Gui::SoFC3DEffects::updateGeometry()
     if (updateBoundingBox()) {
         updateCameraView();
         updatePlaneCoords();
+    }
+    if (BoundingBox.isEmpty()) {
+        shadowSwitch->whichChild = SO_SWITCH_NONE;
+    }
+    else {
+        shadowSwitch->whichChild = 0;
     }
 }
 
