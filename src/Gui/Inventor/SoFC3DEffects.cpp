@@ -38,6 +38,7 @@
 #include <Inventor/nodes/SoShaderParameter.h>
 #include <Inventor/nodes/SoVertexShader.h>
 #include <Inventor/nodes/SoFragmentShader.h>
+#include <Inventor/nodes/SoTransparencyType.h>
 
 #include "SoFC3DEffects.h"
 
@@ -79,7 +80,21 @@ SoFC3DEffects::SoFC3DEffects()
 void
 SoFC3DEffects::initClass()
 {
-    SO_NODE_INIT_CLASS(SoFC3DEffects, SoSeparator, "Separator");
+    SO_NODE_INIT_CLASS(SoFC3DEffects, SoSeparator, "3DEffects");
+}
+
+GLint majorVersion = 0, minorVersion = 0;
+
+bool Gui::SoFC3DEffects::areEffectsSupported()
+{
+#ifndef GL_MAJOR_VERSION
+    return false
+#else
+    glGetIntegerv(GL_MAJOR_VERSION, &majorVersion);
+    glGetIntegerv(GL_MINOR_VERSION, &minorVersion);
+
+    return (majorVersion > 3 || (majorVersion == 3 && minorVersion >= 3));
+#endif
 }
 
 
@@ -93,18 +108,22 @@ void SoFC3DEffects::setScene(SoNode* scene)
 }
 
 
-void Gui::SoFC3DEffects::doDebug()
+void SoFC3DEffects::doDebug()
 {
     enableBasePlaneShadow = true;
 }
 
-void Gui::SoFC3DEffects::createScene()
+void SoFC3DEffects::createScene()
 {
     createShadow();
 
     UpdateCallback = new SoCallback;
     UpdateCallback->setCallback(UpdateCallbackFunc, this);
     addChild(UpdateCallback);
+
+    auto transparancyType = new SoTransparencyType;
+    transparancyType->value = SoTransparencyType::BLEND;
+    addChild(transparancyType);
 
     // blur shadow pass 1
     ShaderProgHoriz = new SoShaderProgram;
@@ -120,10 +139,13 @@ void Gui::SoFC3DEffects::createScene()
 
     // a transparent plane under the scene to accept the shadow
     createShadowPlane(BlurPass2Texture);
-    addChild(ShadowPlane);
+    shadowSwitch = new SoSwitch();
+    shadowSwitch->whichChild = SO_SWITCH_NONE;
+    shadowSwitch->addChild(ShadowPlane);
+    addChild(shadowSwitch);
 }
 
-bool Gui::SoFC3DEffects::updateBoundingBox()
+bool SoFC3DEffects::updateBoundingBox()
 {
     SbViewportRegion myViewport;
     SoGetBoundingBoxAction object_bbox(myViewport);
@@ -150,7 +172,7 @@ bool Gui::SoFC3DEffects::updateBoundingBox()
     return true;
 }
 
-void Gui::SoFC3DEffects::updateCameraView()
+void SoFC3DEffects::updateCameraView()
 {
     float sizex, sizey, sizez;
     BoundingBox.getSize(sizex, sizey, sizez);
@@ -165,7 +187,7 @@ void Gui::SoFC3DEffects::updateCameraView()
     OrthoCam->pointAt(SbVec3f(cent[0], cent[1], cent[2]), SbVec3f(0, 1, 0));
 }
 
-void Gui::SoFC3DEffects::updatePlaneCoords()
+void SoFC3DEffects::updatePlaneCoords()
 {
     SbVec3f& minp = BoundingBox.getMin();
     SbVec3f& maxp = BoundingBox.getMax();
@@ -180,11 +202,21 @@ void Gui::SoFC3DEffects::updatePlaneCoords()
     ShadowPlaneCoords->point.setValues(0, 4, vertices);
 }
 
-void Gui::SoFC3DEffects::updateGeometry()
+void SoFC3DEffects::updateGeometry()
 {
+    if (!areEffectsSupported()) {
+        return;
+    }
+
     if (updateBoundingBox()) {
         updateCameraView();
         updatePlaneCoords();
+        if (BoundingBox.isEmpty()) {
+            shadowSwitch->whichChild = SO_SWITCH_NONE;
+        }
+        else {
+            shadowSwitch->whichChild = 0;
+        }
     }
 }
 
@@ -225,7 +257,7 @@ void SoFC3DEffects::createBlurShader(SoShaderProgram* prog, bool isHorizontal)
     prog->shaderObject.set1Value(1, frag);
 }
 
-void Gui::SoFC3DEffects::createShadowBlur(SoSceneTexture2* fromTex, SoSceneTexture2* toTex, SoShaderProgram* prog)
+void SoFC3DEffects::createShadowBlur(SoSceneTexture2* fromTex, SoSceneTexture2* toTex, SoShaderProgram* prog)
 {
     static float vertices[4][3] = {
         { -1, -1, 0},
@@ -253,7 +285,7 @@ void Gui::SoFC3DEffects::createShadowBlur(SoSceneTexture2* fromTex, SoSceneTextu
 
 }
 
-void Gui::SoFC3DEffects::createShadowPlane(SoSceneTexture2* texture)
+void SoFC3DEffects::createShadowPlane(SoSceneTexture2* texture)
 {
     static float texCoordVals[4][2] = {
         { 0, 0 },
@@ -375,5 +407,4 @@ void main()
     out_color = sum;
 }
 )";
-
 

@@ -33,18 +33,19 @@
 #include <Inventor/nodes/SoOrthographicCamera.h>
 #include <Inventor/nodes/SoCoordinate3.h>
 #include <Inventor/nodes/SoCallback.h>
+#include <Inventor/nodes/SoSwitch.h>
 
 namespace Gui
 {
 
 class /*GuiExport*/ SoFC3DEffects : public SoSeparator
 {
-    //typedef SoSeparator inherited;
-    using inherited = SoGroup;
+    using inherited = SoSeparator;
     SO_NODE_HEADER(Gui::SoFC3DEffects);
 
 public:
     static void initClass();
+    static bool areEffectsSupported();
     //static void finish();
     SoFC3DEffects();
 
@@ -63,6 +64,7 @@ public:
     //void GLRenderBelowPath(SoGLRenderAction* action) override;
     //void GLRenderInPath(SoGLRenderAction* action) override;
     //static  void turnOffCurrentHighlight(SoGLRenderAction* action);
+    //void GLRender(SoGLRenderAction* action) override;
     void updateGeometry();
 
 protected:
@@ -80,6 +82,7 @@ protected:
     ~SoFC3DEffects() override;
 
     SoNode* Scene;
+    SoSwitch* shadowSwitch;
     SoGroup* ShadowPlane;
     SoSeparator* BaseShadowScene;
     SoSceneTexture2* BaseShadowTexture;
