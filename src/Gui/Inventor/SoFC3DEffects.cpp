@@ -93,12 +93,12 @@ void SoFC3DEffects::setScene(SoNode* scene)
 }
 
 
-void Gui::SoFC3DEffects::doDebug()
+void SoFC3DEffects::doDebug()
 {
     enableBasePlaneShadow = true;
 }
 
-void Gui::SoFC3DEffects::createScene()
+void SoFC3DEffects::createScene()
 {
     createShadow();
 
@@ -125,7 +125,7 @@ void Gui::SoFC3DEffects::createScene()
     addChild(shadowSwitch);
 }
 
-bool Gui::SoFC3DEffects::updateBoundingBox()
+bool SoFC3DEffects::updateBoundingBox()
 {
     SbViewportRegion myViewport;
     SoGetBoundingBoxAction object_bbox(myViewport);
@@ -152,7 +152,7 @@ bool Gui::SoFC3DEffects::updateBoundingBox()
     return true;
 }
 
-void Gui::SoFC3DEffects::updateCameraView()
+void SoFC3DEffects::updateCameraView()
 {
     float sizex, sizey, sizez;
     BoundingBox.getSize(sizex, sizey, sizez);
@@ -167,7 +167,7 @@ void Gui::SoFC3DEffects::updateCameraView()
     OrthoCam->pointAt(SbVec3f(cent[0], cent[1], cent[2]), SbVec3f(0, 1, 0));
 }
 
-void Gui::SoFC3DEffects::updatePlaneCoords()
+void SoFC3DEffects::updatePlaneCoords()
 {
     SbVec3f& minp = BoundingBox.getMin();
     SbVec3f& maxp = BoundingBox.getMax();
@@ -182,7 +182,25 @@ void Gui::SoFC3DEffects::updatePlaneCoords()
     ShadowPlaneCoords->point.setValues(0, 4, vertices);
 }
 
-void Gui::SoFC3DEffects::updateGeometry()
+void Gui::SoFC3DEffects::GLRenderBelowPath(SoGLRenderAction* action)
+{
+    inherited::GLRenderBelowPath(action);
+}
+
+void Gui::SoFC3DEffects::GLRenderInPath(SoGLRenderAction* action)
+{
+    inherited::GLRenderInPath(action);
+}
+
+void SoFC3DEffects::GLRender(SoGLRenderAction* action)
+{
+    auto origTransparencyType = action->getTransparencyType();
+    action->setTransparencyType(SoGLRenderAction::BLEND);
+    inherited::GLRender(action);
+    action->setTransparencyType(origTransparencyType);
+}
+
+void SoFC3DEffects::updateGeometry()
 {
     if (updateBoundingBox()) {
         updateCameraView();

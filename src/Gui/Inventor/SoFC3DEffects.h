@@ -61,9 +61,10 @@ public:
     void setScene(SoNode* scene);
 
     //void handleEvent(SoHandleEventAction* action) override;
-    //void GLRenderBelowPath(SoGLRenderAction* action) override;
-    //void GLRenderInPath(SoGLRenderAction* action) override;
+    void GLRenderBelowPath(SoGLRenderAction* action) override;
+    void GLRenderInPath(SoGLRenderAction* action) override;
     //static  void turnOffCurrentHighlight(SoGLRenderAction* action);
+    void GLRender(SoGLRenderAction* action) override;
     void updateGeometry();
 
 protected:
