@@ -39,8 +39,10 @@
 #include <Inventor/nodes/SoVertexShader.h>
 #include <Inventor/nodes/SoFragmentShader.h>
 #include <Inventor/nodes/SoTransparencyType.h>
+#include <Inventor/nodes/SoPickStyle.h>
 
 #include "SoFC3DEffects.h"
+#include "View3DInventorViewer.h"
 
 using namespace Gui;
 
@@ -51,11 +53,47 @@ extern char const TxtShadowFragmentShader[];
 #define SHADOW_TEX_W  512
 #define SHADOW_TEX_H  512
 
-static void UpdateCallbackFunc(void* data, SoAction* action) {
+static void UpdateCallbackFunc(void* data, SoAction* action)
+{
     if (action->isOfType(SoGLRenderAction::getClassTypeId())) {
         SoFC3DEffects* effects = (SoFC3DEffects*)data;
         effects->updateGeometry();
-        //SoCacheElement::invalidate(action->getState());
+        //glCullFace(GL_FRONT);
+        // SoCacheElement::invalidate(action->getState());
+    }
+}
+
+static void XSectionDrawFiller(void* data, SoAction* action)
+{
+    if (action->isOfType(SoGLRenderAction::getClassTypeId())) {
+        glDisable(GL_CULL_FACE);
+        glEnable(GL_STENCIL_TEST);
+        glStencilFunc(GL_EQUAL, 1, 0xFF);
+        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
+        //glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        SoFC3DEffects* effects = (SoFC3DEffects*)data;
+        effects->RestoreLinesState();
+
+        // SoCacheElement::invalidate(action->getState());
+    }
+}
+
+
+static void XSectionRestoreFunc(void* data, SoAction* action)
+{
+    if (action->isOfType(SoGLRenderAction::getClassTypeId())) {
+        //glCullFace(GL_BACK);
+        glDisable(GL_POLYGON_OFFSET_FILL);
+        glDisable(GL_CULL_FACE);
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glDisable(GL_STENCIL_TEST);
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
+        glDepthFunc(GL_LESS);
+
+        // SoCacheElement::invalidate(action->getState());
     }
 }
 
@@ -83,13 +121,13 @@ SoFC3DEffects::initClass()
     SO_NODE_INIT_CLASS(SoFC3DEffects, SoSeparator, "3DEffects");
 }
 
-GLint majorVersion = 0, minorVersion = 0;
 
 bool Gui::SoFC3DEffects::areEffectsSupported()
 {
 #ifndef GL_MAJOR_VERSION
-    return false
+    return false;
 #else
+    GLint majorVersion = 0, minorVersion = 0;
     glGetIntegerv(GL_MAJOR_VERSION, &majorVersion);
     glGetIntegerv(GL_MINOR_VERSION, &minorVersion);
 
@@ -100,11 +138,21 @@ bool Gui::SoFC3DEffects::areEffectsSupported()
 
 void SoFC3DEffects::setScene(SoNode* scene)
 {
+    if (scene == nullptr) {
+        scene = nullScene;
+    }
+    XSectionRoot->replaceChild(Scene, scene);
+
     Scene = scene;
     //updateGeometry();
     BaseShadowScene->removeAllChildren();
     BaseShadowScene->addChild(OrthoCam);
     BaseShadowScene->addChild(Scene);
+}
+
+void Gui::SoFC3DEffects::setRenderManager(SoRenderManager* renderManager)
+{
+    RenderManager = renderManager;
 }
 
 
@@ -115,7 +163,15 @@ void SoFC3DEffects::doDebug()
 
 void SoFC3DEffects::createScene()
 {
+    nullScene = new SoSeparator;
+    nullScene->ref();
+    Scene = nullScene;
+
     createShadow();
+
+    auto pickStyle = new SoPickStyle;
+    pickStyle->style = SoPickStyle::UNPICKABLE;
+    addChild(pickStyle);
 
     UpdateCallback = new SoCallback;
     UpdateCallback->setCallback(UpdateCallbackFunc, this);
@@ -125,24 +181,19 @@ void SoFC3DEffects::createScene()
     transparancyType->value = SoTransparencyType::BLEND;
     addChild(transparancyType);
 
-    // blur shadow pass 1
-    ShaderProgHoriz = new SoShaderProgram;
-    createBlurShader(ShaderProgHoriz, true);
-    BlurPass1Texture = new SoSceneTexture2;
-    createShadowBlur(BaseShadowTexture, BlurPass1Texture, ShaderProgHoriz);
-
-    // blur shadow pass 2
-    ShaderProgVert = new SoShaderProgram;
-    createBlurShader(ShaderProgVert, false);
-    BlurPass2Texture = new SoSceneTexture2;
-    createShadowBlur(BlurPass1Texture, BlurPass2Texture, ShaderProgVert);
-
     // a transparent plane under the scene to accept the shadow
-    createShadowPlane(BlurPass2Texture);
-    shadowSwitch = new SoSwitch();
+    createShadowPlane();
+    shadowSwitch = new SoSwitch;
     shadowSwitch->whichChild = SO_SWITCH_NONE;
-    shadowSwitch->addChild(ShadowPlane);
+    shadowSwitch->addChild(ShadowPlaneRoot);
     addChild(shadowSwitch);
+
+    // a cross section hole filler
+    createCrossSection();
+    XSectionSwitch = new SoSwitch;
+    XSectionSwitch->whichChild = SO_SWITCH_NONE;
+    XSectionSwitch->addChild(XSectionRoot);
+    addChild(XSectionSwitch);
 }
 
 bool SoFC3DEffects::updateBoundingBox()
@@ -213,11 +264,32 @@ void SoFC3DEffects::updateGeometry()
         updatePlaneCoords();
         if (BoundingBox.isEmpty()) {
             shadowSwitch->whichChild = SO_SWITCH_NONE;
+            XSectionSwitch->whichChild = SO_SWITCH_NONE;
         }
         else {
-            shadowSwitch->whichChild = 0;
+            //shadowSwitch->whichChild = 0;
+            XSectionSwitch->whichChild = 0;
         }
+        SoCamera* cam = RenderManager->getCamera();
     }
+}
+
+void SoFC3DEffects::SetViewer(View3DInventorViewer* viewer)
+{
+    Viewer3D = viewer;
+}
+
+void SoFC3DEffects::HideLines()
+{
+    saveRenderMode = "Flat Lines";
+    // Viewer3D->getOverrideMode();
+    std::string shadedmode = "Shaded";
+    Viewer3D->setOverrideMode(shadedmode);
+}
+
+void SoFC3DEffects::RestoreLinesState()
+{
+    Viewer3D->setOverrideMode(saveRenderMode);
 }
 
 void SoFC3DEffects::createShadow()
@@ -285,7 +357,7 @@ void SoFC3DEffects::createShadowBlur(SoSceneTexture2* fromTex, SoSceneTexture2* 
 
 }
 
-void SoFC3DEffects::createShadowPlane(SoSceneTexture2* texture)
+void SoFC3DEffects::createShadowPlane()
 {
     static float texCoordVals[4][2] = {
         { 0, 0 },
@@ -294,22 +366,34 @@ void SoFC3DEffects::createShadowPlane(SoSceneTexture2* texture)
         { 0, 1 }
     };
 
-    ShadowPlane = new SoGroup;
+    ShadowPlaneRoot = new SoGroup;
+
+    // blur shadow pass 1
+    ShaderProgHoriz = new SoShaderProgram;
+    createBlurShader(ShaderProgHoriz, true);
+    BlurPass1Texture = new SoSceneTexture2;
+    createShadowBlur(BaseShadowTexture, BlurPass1Texture, ShaderProgHoriz);
+
+    // blur shadow pass 2
+    ShaderProgVert = new SoShaderProgram;
+    createBlurShader(ShaderProgVert, false);
+    BlurPass2Texture = new SoSceneTexture2;
+    createShadowBlur(BlurPass1Texture, BlurPass2Texture, ShaderProgVert);
 
     SoShapeHints* shapeHints = new SoShapeHints;
     shapeHints->shapeType = SoShapeHints::SOLID;
     shapeHints->vertexOrdering = SoShapeHints::COUNTERCLOCKWISE;
-    ShadowPlane->addChild(shapeHints);
+    ShadowPlaneRoot->addChild(shapeHints);
 
     SoMaterial* col = new SoMaterial;
     col->transparency.setValue(0.8);
     col->ambientColor.setValue(1.0, 1.0, 1.0);
     //texture->model = SoTexture2::DECAL;
 
-    ShadowPlane->addChild(col);
+    ShadowPlaneRoot->addChild(col);
 
     ShadowPlaneCoords = new SoCoordinate3;
-    ShadowPlane->addChild(ShadowPlaneCoords);
+    ShadowPlaneRoot->addChild(ShadowPlaneCoords);
 
     SoTextureCoordinate2* texCoords = new SoTextureCoordinate2;
     texCoords->point.setValues(0, 4, texCoordVals);
@@ -317,18 +401,50 @@ void SoFC3DEffects::createShadowPlane(SoSceneTexture2* texture)
     texBinding->value = SoTextureCoordinateBinding::PER_VERTEX;
     SoComplexity* complexity = new SoComplexity;
     complexity->textureQuality = 1.0;
-    ShadowPlane->addChild(complexity);
-    ShadowPlane->addChild(texCoords);
-    ShadowPlane->addChild(texBinding);
-    ShadowPlane->addChild(texture);
+    ShadowPlaneRoot->addChild(complexity);
+    ShadowPlaneRoot->addChild(texCoords);
+    ShadowPlaneRoot->addChild(texBinding);
+    ShadowPlaneRoot->addChild(BlurPass2Texture);
 
     SoFaceSet* faceSet = new SoFaceSet;
     faceSet->numVertices.set1Value(0, 4);  // One quad with 4 vertices
-    ShadowPlane->addChild(faceSet);
+    ShadowPlaneRoot->addChild(faceSet);
+}
+
+void Gui::SoFC3DEffects::createCrossSection()
+{
+
+    XSectionRoot = new SoSeparator;
+    nullSlicerObject = new SoSeparator;
+    nullSlicerObject->ref();
+    sliceObject = nullSlicerObject;
+
+    auto drawFillerCallback = new SoCallback;
+    drawFillerCallback->setCallback(XSectionDrawFiller, this);
+    XSectionRoot->addChild(drawFillerCallback);
+
+    SoMaterial* material = new SoMaterial;
+    material->diffuseColor.setValue(0.7f, 0.65f, 0.6f);  // Red color
+    XSectionRoot->addChild(material);
+    XSectionRoot->addChild(sliceObject);
+
+    auto restoreCallback = new SoCallback;
+    restoreCallback->setCallback(XSectionRestoreFunc, this);
+    XSectionRoot->addChild(restoreCallback);
+}
+
+void Gui::SoFC3DEffects::setSlicerObject(SoSeparator* sliceObj)
+{
+    if (sliceObj == nullptr) {
+        sliceObj = nullSlicerObject;
+    }
+    XSectionRoot->replaceChild(sliceObject, sliceObj);
+    sliceObject = sliceObj;
 }
 
 SoFC3DEffects::~SoFC3DEffects()
 {
+    nullSlicerObject->unref();
 }
 
 char const TxtVertexShader[] = R"(

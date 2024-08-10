@@ -75,6 +75,7 @@
 #include "Inventor/SoAutoZoomTranslation.h"
 #include "Inventor/SoDrawingGrid.h"
 #include "Inventor/SoFC3DEffects.h"
+#include "Inventor/SoFC3DEffectsSetup.h"
 #include "propertyeditor/PropertyItem.h"
 #include "ArcEngine.h"
 
@@ -145,6 +146,7 @@ void Gui::SoFCDB::init()
     SoMouseWheelEvent               ::initClass();
     So3DAnnotation                  ::initClass();
     SoFC3DEffects                   ::initClass();
+    SoFC3DEffectsSetup              ::initClass();
 
     PropertyItem                    ::init();
     PropertySeparatorItem           ::init();

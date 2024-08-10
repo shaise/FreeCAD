@@ -20,15 +20,15 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef GUI_SOFC3DEFFECTS_H
-#define GUI_SOFC3DEFFECTS_H
+#ifndef GUI_SOFC3DEFFECTSSETUP_H
+#define GUI_SOFC3DEFFECTSSETUP_H
 
 #include <Inventor/nodes/SoSeparator.h>
 #include <Inventor/nodes/SoNode.h>
 #include <Inventor/fields/SoSFBool.h>
 #include <Inventor/fields/SoSFString.h>
 #include <Inventor/actions/SoGetBoundingBoxAction.h>
-#include <Inventor/nodes/SoSceneTexture2.h>
+#include <Inventor/nodes/SoTexture2.h>
 #include <Inventor/nodes/SoShaderProgram.h>
 #include <Inventor/nodes/SoOrthographicCamera.h>
 #include <Inventor/nodes/SoCoordinate3.h>
@@ -43,29 +43,28 @@ namespace Gui
 
 class View3DInventorViewer;
 
-class /*GuiExport*/ SoFC3DEffects : public SoSeparator
+class SoFC3DEffectsSetup : public SoSeparator
 {
     using inherited = SoSeparator;
-    SO_NODE_HEADER(Gui::SoFC3DEffects);
+    SO_NODE_HEADER(Gui::SoFC3DEffectsSetup);
 
 public:
     static void initClass();
-    static bool areEffectsSupported();
     //static void finish();
-    SoFC3DEffects();
+    SoFC3DEffectsSetup();
 
     SoSFString documentName;
     SoSFString objectName;
     SoSFString subElementName;
-    SoSFBool enableBasePlaneShadow;
     SoSFBool enableAmbientOclusion;
+    SoSFBool enableCrossSections;
     SoSFBool enableShadows;
 
-    //void doAction(SoAction* action) override;
-    //virtual void GLRender(SoGLRenderAction* action) override;
     void setScene(SoNode* scene);
-    void setSlicerObject(SoSeparator* sliceObj);
     void setRenderManager(SoRenderManager* renderManager);
+    void SetViewer(View3DInventorViewer* viewer);
+    void HideLines();
+    void RestoreLinesState();
 
     //void handleEvent(SoHandleEventAction* action) override;
     //void GLRenderBelowPath(SoGLRenderAction* action) override;
@@ -73,58 +72,39 @@ public:
     //static  void turnOffCurrentHighlight(SoGLRenderAction* action);
     //void GLRender(SoGLRenderAction* action) override;
     void updateGeometry();
-    void SetViewer(View3DInventorViewer* viewer);
-    void HideLines();
-    void RestoreLinesState();
+    SoSeparator* getSlicerObject();
 
 protected:
 
     void createScene();
-    void doDebug();
+    void createSlicerObject();
 
     // shadow generation
     bool updateBoundingBox();
-    void updateCameraView();
-    void updatePlaneCoords();
-    void createShadow();
-    void createBlurShader(SoShaderProgram* prog, bool isHorizontal);
-    void createShadowBlur(SoSceneTexture2* fromTex, SoSceneTexture2* toTex, SoShaderProgram* prog);
-    void createShadowPlane();
+    void updateXSectionCoords();
 
     // cross section generation
-    void createCrossSection();
+    void createCrossSectionSetup();
 
-    ~SoFC3DEffects() override;
+    ~SoFC3DEffectsSetup() override;
 
     SoNode* Scene;
     SoNode* nullScene;
-    SoCallback* UpdateCallback;
     SoRenderManager* RenderManager;
     View3DInventorViewer* Viewer3D;
-    SoSwitch* shadowSwitch;
     SoSwitch* SSAOSwitch;
     SoSwitch* XSectionSwitch;
-    std::string saveRenderMode;
-
-    // shadow nodes
-    SoGroup* ShadowPlaneRoot;
-    SoSeparator* BaseShadowScene;
-    SoSceneTexture2* BaseShadowTexture;
-    SoSceneTexture2* BlurPass1Texture;
-    SoSceneTexture2* BlurPass2Texture;
     SbBox3f BoundingBox;
     SbBox3f OldBoundingBox;
-    SoShaderProgram* ShaderProgHoriz;
-    SoShaderProgram* ShaderProgVert;
-    SoOrthographicCamera* OrthoCam;
-    SoCoordinate3* ShadowPlaneCoords;
+    std::string saveRenderMode;
 
     // cross-section nodes
+    SoTexture2* XSectionTexture;
+    SoCoordinate3* XSectionCoords;
     SoSeparator* XSectionRoot;
-    SoSeparator* nullSlicerObject;
     SoSeparator* sliceObject;
 };
 
 }
 
-#endif  // GUI_SOFC3DEFFECTS_H
+#endif  // GUI_SOFC3DEFFECTSSETUP_H

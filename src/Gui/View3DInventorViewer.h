@@ -46,6 +46,7 @@
 #include "View3DInventorSelection.h"
 #include "Quarter/SoQTQuarterAdaptor.h"
 #include "Inventor/SoFC3DEffects.h"
+#include "Inventor/SoFC3DEffectsSetup.h"
 
 
 class SoTranslation;
@@ -503,6 +504,7 @@ private:
     NavigationStyle* navigation;
     SoFCUnifiedSelection* selectionRoot;
     SoFC3DEffects* effects3d;
+    SoFC3DEffectsSetup* effects3dSetup;
 
     SoClipPlane *pcClipPlane;
 
