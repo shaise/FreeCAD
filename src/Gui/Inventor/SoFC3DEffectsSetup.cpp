@@ -151,8 +151,7 @@ void Gui::SoFC3DEffectsSetup::SetViewer(View3DInventorViewer* viewer)
 
 void Gui::SoFC3DEffectsSetup::HideLines()
 {
-    saveRenderMode = "Flat Lines";
-    //Viewer3D->getOverrideMode();
+    saveRenderMode = Viewer3D->getOverrideMode();
     std::string shadedmode = "Shaded";
     Viewer3D->setOverrideMode(shadedmode);
 }
@@ -167,7 +166,7 @@ void SoFC3DEffectsSetup::createScene()
     // a cross section hole filler
     createCrossSectionSetup();
     XSectionSwitch = new SoSwitch;
-    XSectionSwitch->whichChild = 0;
+    XSectionSwitch->whichChild = 0; // SO_SWITCH_NONE;
     XSectionSwitch->addChild(XSectionRoot);
     addChild(XSectionSwitch);
 }

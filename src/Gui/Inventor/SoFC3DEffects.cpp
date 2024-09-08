@@ -74,7 +74,6 @@ static void XSectionDrawFiller(void* data, SoAction* action)
         glDepthMask(GL_FALSE);
         //glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         SoFC3DEffects* effects = (SoFC3DEffects*)data;
-        effects->RestoreLinesState();
 
         // SoCacheElement::invalidate(action->getState());
     }
@@ -138,14 +137,15 @@ bool Gui::SoFC3DEffects::areEffectsSupported()
 
 void SoFC3DEffects::setScene(SoNode* scene)
 {
-    if (scene == nullptr) {
-        scene = nullScene;
-    }
-    XSectionRoot->replaceChild(Scene, scene);
+    //if (scene == nullptr) {
+    //    scene = nullScene;
+    //}
+    //XSectionRoot->replaceChild(Scene, scene);
 
     Scene = scene;
     //updateGeometry();
-    BaseShadowScene->removeAllChildren();
+    if (BaseShadowScene->getNumChildren() > 0)
+        BaseShadowScene->removeAllChildren();
     BaseShadowScene->addChild(OrthoCam);
     BaseShadowScene->addChild(Scene);
 }
@@ -279,23 +279,11 @@ void SoFC3DEffects::SetViewer(View3DInventorViewer* viewer)
     Viewer3D = viewer;
 }
 
-void SoFC3DEffects::HideLines()
-{
-    saveRenderMode = "Flat Lines";
-    // Viewer3D->getOverrideMode();
-    std::string shadedmode = "Shaded";
-    Viewer3D->setOverrideMode(shadedmode);
-}
-
-void SoFC3DEffects::RestoreLinesState()
-{
-    Viewer3D->setOverrideMode(saveRenderMode);
-}
-
 void SoFC3DEffects::createShadow()
 {
     BaseShadowTexture = new SoSceneTexture2;
     BaseShadowScene = new SoSeparator;
+    BaseShadowScene->ref();
 
     OrthoCam = new SoOrthographicCamera;
 
@@ -445,6 +433,7 @@ void Gui::SoFC3DEffects::setSlicerObject(SoSeparator* sliceObj)
 SoFC3DEffects::~SoFC3DEffects()
 {
     nullSlicerObject->unref();
+    BaseShadowScene->unref();
 }
 
 char const TxtVertexShader[] = R"(
