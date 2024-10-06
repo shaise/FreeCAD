@@ -74,6 +74,10 @@ void DlgSettings3DViewImp::saveSettings()
     ui->sliderIntensity->onSave();
     ui->radioPerspective->onSave();
     ui->radioOrthographic->onSave();
+    ui->checkBox_EnableBasePlaneShadows->onSave();
+    ui->checkBox_EnableCrossSectionFill->onSave();
+    ui->checkBox_EnableAmbientOcclusion->onSave();
+    ui->checkBox_EnableShadows->onSave();
 }
 
 void DlgSettings3DViewImp::loadSettings()
@@ -92,6 +96,10 @@ void DlgSettings3DViewImp::loadSettings()
     ui->radioPerspective->onRestore();
     ui->radioOrthographic->onRestore();
     ui->comboTransparentRender->onRestore();
+    ui->checkBox_EnableBasePlaneShadows->onRestore();
+    ui->checkBox_EnableCrossSectionFill->onRestore();
+    ui->checkBox_EnableAmbientOcclusion->onRestore();
+    ui->checkBox_EnableShadows->onRestore();
 
     loadAntiAliasing();
     loadRenderCache();

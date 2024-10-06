@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>499</width>
-    <height>520</height>
+    <width>500</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -554,6 +554,73 @@ bounding box size of the 3D object that is currently displayed.</string>
         </property>
         <property name="prefPath" stdset="0">
          <cstring>View</cstring>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="group3DEffects">
+     <property name="title">
+      <string>3D Effects</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_1">
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <item>
+       <widget class="Gui::PrefCheckBox" name="checkBox_EnableBasePlaneShadows">
+        <property name="text">
+         <string>Enable base plane shadows</string>
+        </property>
+        <property name="prefEntry" stdset="0">
+         <cstring>EnBasePlaneShadows</cstring>
+        </property>
+        <property name="prefPath" stdset="0">
+         <cstring>3DEffects</cstring>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Gui::PrefCheckBox" name="checkBox_EnableCrossSectionFill">
+        <property name="text">
+         <string>Enable cross section fill</string>
+        </property>
+        <property name="prefEntry" stdset="0">
+         <cstring>EnSectionFill</cstring>
+        </property>
+        <property name="prefPath" stdset="0">
+         <cstring>3DEffects</cstring>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Gui::PrefCheckBox" name="checkBox_EnableAmbientOcclusion">
+        <property name="text">
+         <string>Enable ambient occlusion</string>
+        </property>
+        <property name="prefEntry" stdset="0">
+         <cstring>EnSSAO</cstring>
+        </property>
+        <property name="prefPath" stdset="0">
+         <cstring>3DEffects</cstring>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Gui::PrefCheckBox" name="checkBox_EnableShadows">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Enable shadows</string>
+        </property>
+        <property name="prefEntry" stdset="0">
+         <cstring>EnShadows</cstring>
+        </property>
+        <property name="prefPath" stdset="0">
+         <cstring>3DEffects</cstring>
         </property>
        </widget>
       </item>

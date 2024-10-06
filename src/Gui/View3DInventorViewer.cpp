@@ -514,28 +514,28 @@ void View3DInventorViewer::init()
     pcEditingRoot->addChild(pcEditingTransform);
     pcViewProviderRoot->addChild(pcEditingRoot);
 
-    effects3dSetup = new SoFC3DEffectsSetup();
-    effects3dSetup->setName("Efectd3DSetup");
-    effects3dSetup->setRenderManager(getSoRenderManager());
-    effects3dSetup->SetViewer(this);
-    pcViewProviderRoot->addChild(effects3dSetup);
+    //effects3dSetup = new SoFC3DEffectsSetup();
+    //effects3dSetup->setName("Efectd3DSetup");
+    //effects3dSetup->setRenderManager(getSoRenderManager());
+    //effects3dSetup->SetViewer(this);
+    //pcViewProviderRoot->addChild(effects3dSetup);
 
     // Create group for the physical object
     objectGroup = new SoGroup();
     objectGroup->ref();
     pcViewProviderRoot->addChild(objectGroup);
 
-    effects3dSetup->setScene(objectGroup);
+    //effects3dSetup->setScene(objectGroup);
 
-    effects3d = new SoFC3DEffects;
-    effects3d->setName("Efectd3D");
-    const char *name = effects3d->getName();
-    effects3d->setName(name);
-    effects3d->setScene(objectGroup);
-    effects3d->setSlicerObject(effects3dSetup->getSlicerObject());
-    effects3d->setRenderManager(getSoRenderManager());
-    effects3d->SetViewer(this);
-    pcViewProviderRoot->addChild(effects3d);
+    //effects3d = new SoFC3DEffects;
+    //effects3d->setName("Efectd3D");
+    //const char *name = effects3d->getName();
+    //effects3d->setName(name);
+    //effects3d->setScene(objectGroup);
+    //effects3d->setSlicerObject(effects3dSetup->getSlicerObject());
+    //effects3d->setRenderManager(getSoRenderManager());
+    //effects3d->SetViewer(this);
+    //pcViewProviderRoot->addChild(effects3d);
 
     // Set our own render action which show a bounding box if
     // the SoFCSelection::BOX style is set
